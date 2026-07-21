@@ -53,7 +53,7 @@ GEMINI_API_KEY=tu_api_key_de_gemini
 npm run dev
 ```
 
-Abrí [http://localhost:3000]() en el navegador.
+Abrí [http://localhost:3000](http://localhost:3000) en el navegador.
 
 1. Subí un documento (PDF, XLSX, XLS o CSV) arrastrándolo al recuadro o haciendo clic para seleccionarlo.
 2. Escribí una pregunta relacionada con el contenido del archivo.
@@ -62,7 +62,7 @@ Abrí [http://localhost:3000]() en el navegador.
 
 ## Probar la página
 
-👉 **[Abrir Omnimind](https://tu-proyecto.vercel.app)** ← reemplazar con el enlace real una vez desplegado
+👉 **[Abrir Omnimind](https://onmi-mind-ten.vercel.app/)** ← reemplazar con el enlace real una vez desplegado
 
 ## Estructura del proyecto
 
