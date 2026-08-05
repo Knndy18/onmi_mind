@@ -3,17 +3,14 @@
     import { extractText, getDocumentProxy } from 'unpdf';
     import * as XLSX from 'xlsx';
 
-    // Inicializa el cliente de Gemini con la clave de entorno
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-    // Convierte un archivo Excel/CSV a texto plano legible para la IA
     function extractTextFromSpreadsheet(buffer: Buffer): string {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     let fullText = '';
 
     workbook.SheetNames.forEach((sheetName) => {
         const sheet = workbook.Sheets[sheetName];
-        // Convierte cada hoja a texto tipo CSV, fácil de leer para la IA
         const csvText = XLSX.utils.sheet_to_csv(sheet);
         fullText += `\n--- Hoja: ${sheetName} ---\n${csvText}\n`;
     });
@@ -23,7 +20,6 @@
 
     export async function POST(req: NextRequest) {
     try {
-        // 1. Recibir los datos del Frontend
         const formData = await req.formData();
         const file = formData.get('file') as File;
         const question = formData.get('question') as string;
@@ -35,7 +31,6 @@
         );
         }
 
-        // 2. Detectar tipo de archivo por su nombre/extensión
         const fileName = file.name.toLowerCase();
         const isPDF = fileName.endsWith('.pdf');
         const isSpreadsheet =
@@ -50,11 +45,9 @@
         );
         }
 
-        // 3. Preparar el archivo
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // 4. Extraer el texto según el tipo de archivo
         let documentText = '';
         try {
         if (isPDF) {
@@ -80,30 +73,31 @@
         );
         }
 
-        // 5. Configurar el modelo de Gemini
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        // Configuración del modelo con Instrucción de Sistema flexible
+        const model = genAI.getGenerativeModel({
+        model: 'gemini-2.5-flash',
+        systemInstruction: `
+        Eres Omnimind, un asistente conversacional e inteligente experto en análisis de documentos y datos.
+        
+        Instrucciones de flexibilidad:
+        - Tu prioridad principal es usar la información del documento adjunto para responder.
+        - Si la respuesta exacta no está escrita de forma explícita en el documento, puedes realizar inferencias lógicas o complementar con tu conocimiento general.
+        - Si respondes basándote en tu conocimiento general o en una deducción, acláralo amablemente de forma breve.
+        - Si la pregunta es un saludo, una duda conceptual o conversación general, responde con naturalidad sin exigir que la información esté en el archivo.
+        - Sé amable, claro y colaborativo en todo momento.
+        `,
+        });
 
-        // 6. Crear el Prompt (Instrucción) para la IA
         const tipoDocumento = isPDF ? 'documento PDF' : 'archivo de datos (Excel/CSV)';
 
         const prompt = `
-        Eres Omnimind, un agente inteligente experto en análisis de documentos y datos.
-        A continuación, te proporciono el contenido extraído de un ${tipoDocumento} y una pregunta del usuario.
-        
-        Reglas estrictas:
-        - Responde la pregunta basándote ÚNICAMENTE en la información proporcionada.
-        - Si el contenido es una tabla de datos, analizá filas, columnas y valores con atención antes de responder.
-        - Si la respuesta no se encuentra en el contenido proporcionado, responde EXACTAMENTE: "No tengo suficiente información en este documento para responder a eso."
-        - Sé claro, directo y profesional en tu respuesta.
-
-        CONTENIDO:
+        CONTENIDO DEL ${tipoDocumento.toUpperCase()}:
         ${documentText.substring(0, 50000)}
 
-        PREGUNTA:
+        PREGUNTA DEL USUARIO:
         ${question}
         `;
 
-        // 7. Enviar a Gemini y devolver respuesta
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
