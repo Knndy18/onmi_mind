@@ -304,7 +304,7 @@ export default function Home() {
         )}
 
         <p className="mt-8 sm:mt-10 text-center font-mono text-[11px] text-[#9BA0AB]">
-          Impulsado por Gemini 2.5 Flash - Desarrollado por Kennedy - Todos los derechos reservados © 2026
+          Desarrollado por Kennedy - Todos los derechos reservados © 2026
         </p>
       </div>
     </main>
